@@ -1,0 +1,197 @@
+=======================SL-V BE IT =============================
+EXP 6 (According to new revised assignments) 
+Aim: Design a distributed application using MapReduce under Hadoop for finding maximum 
+number in first and second columns in every line of a given text file. 
+Steps: 
+First install hadoop (if not installed yet) by, 
+https://sl6it.wordpress.com/2015/12/04/1-study-and-configure-hadoop-for-big-data/ 
+# Download sample6.txt file (attached with this post) 
+# Paste sample6.txt in your home folder 
+# Open terminal 
+whoami 
+# It will display your user name, we will use it later. 
+# Open eclipse->new java project->project name exp6->new class-> MaxMap 
+# Add following code in that class 
+package exp6; 
+import java.io.IOException; 
+import org.apache.hadoop.io.IntWritable; 
+import org.apache.hadoop.io.LongWritable; 
+import org.apache.hadoop.io.Text; 
+import org.apache.hadoop.mapreduce.Mapper; 
+public class MaxMap extends Mapper<LongWritable, Text, Text, IntWritable> 
+{ 
+int values[] = new int[10000]; 
+int values1[] = new int[10000]; 
+String word[] ; int maxValue = 0,linenum =0; 
+public void map(LongWritable key, Text value, Context context) throws 
+IOException, InterruptedException 
+{ 
+String words = value.toString(); 
+System.out.println(words); 
+word = words.split(","); 
+for (int i = 0; i < 2; i++) 
+{ 
+System.out.println(word[i]); 
+values[i] = Integer.parseInt(word[i]); 
+values1[i] = Integer.parseInt(word[i]); 
+} 
+if(values1[0] < values1[1]) 
+{ 
+int temp =values1[0]; 
+values1[0] = values1[1]; 
+values1[1] = temp; 
+} 
+maxValue = values1[0]; 
+String text = ""+(linenum+1)+"\t"+values[0]+"\t"+values[1]+""; 
+if(linenum>=0) 
+{ context.write(new Text(text), new IntWritable(maxValue)); 
+} 
+linenum++; 
+} 
+} 
+# Save the file# It will display some errors, so we are going to import three jar files in our project. 
+# Copy hadoop-mapreduce-client-core-2.7.1.jar from ~/hadoop/share/hadoop/mapreduce directory 
+# In eclipse-> right click on exp6 project- >paste 
+# Right click on pasted hadoop-mapreduce-client-core-2.7.1.jar-> Buid path-> add to buid path 
+#Copy hadoop-common-2.7.1.jar from ~/hadoop/share/hadoop/common directory 
+# In eclipse-> right click on exp6 project- >paste 
+# Right click on pasted hadoop-common-2.7.1.jar-> Buid path-> add to buid path 
+#Copy commons-cli-1.2.jar from ~/hadoop/share/hadoop/common/lib directory 
+# In eclipse-> right click on exp6 project- >paste 
+# Right click on pasted commons-cli-1.2.jar-> Buid path-> add to buid path 
+# In eclipse->right click on project exp6->new class-> MaxCount 
+# Add following code in that class (replace your_user_name by your own username ) 
+package exp6; 
+import java.io.BufferedReader; 
+import java.io.File; 
+import java.io.FileReader; 
+import java.util.ArrayList; 
+import java.util.List; 
+import java.util.Scanner; 
+import org.apache.hadoop.conf.Configuration; 
+import org.apache.hadoop.conf.Configured; 
+import org.apache.hadoop.fs.FileStatus; 
+import org.apache.hadoop.fs.FileSystem; 
+import org.apache.hadoop.fs.Path; 
+import org.apache.hadoop.io.IntWritable; 
+import org.apache.hadoop.io.Text; 
+import org.apache.hadoop.mapreduce.Job; 
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat; 
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat; 
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat; 
+import org.apache.hadoop.util.Tool; 
+import org.apache.hadoop.util.ToolRunner; 
+public class MaxCount extends Configured implements Tool 
+{ 
+public static void main(String[] args) throws Exception { 
+int res = ToolRunner.run(new Configuration(), new MaxCount() , args); 
+System.exit(res); 
+} 
+@Override 
+public int run(String[] args) throws Exception { 
+Configuration conf = getConf(); 
+@SuppressWarnings("deprecation") 
+Job job = new Job(conf,"MaxCount"); 
+job.setJarByClass(MaxCount.class); 
+job.setMapperClass(MaxMap.class); 
+job.setNumReduceTasks(0); 
+job.setMapOutputKeyClass(Text.class); 
+job.setMapOutputValueClass(IntWritable.class); 
+job.setInputFormatClass(org.apache.hadoop.mapreduce.lib.input.TextInputFormat.class); 
+job.setOutputFormatClass(TextOutputFormat.class); 
+FileInputFormat.setInputPaths(job, new Path(args[0]));FileOutputFormat.setOutputPath(job, new Path(args[1])); 
+Path outputpath = new Path(args[1]); 
+outputpath.getFileSystem(conf).delete(outputpath, true); 
+job.waitForCompletion(true); 
+FileSystem fs = FileSystem.get(conf); 
+FileStatus[] status = fs.listStatus(new Path(args[1])); 
+//copy hdfs output file to local file 
+for(int i=0;i<status.length;i++){ 
+System.out.println(status[i].getPath()); 
+fs.copyToLocalFile(false, status[i].getPath(), new 
+Path("/home/your_user_name/"+args[1])); 
+} 
+System.out.println("\nLine\tFirst\tSecond\tMaximum"); 
+System.out.println("no \tColumn\tColumn\n"); 
+//display contents of local file 
+BufferedReader br = new BufferedReader(new 
+FileReader("/home/saniya123/"+args[1])); 
+String line = null; 
+while ((line = br.readLine()) != null) { 
+System.out.println(line); 
+} 
+br.close(); 
+Scanner s = new Scanner(new File("/home/saniya123/"+args[1])); 
+List<Integer> max_values = new ArrayList<Integer>(); 
+while (s.hasNext()) 
+{ 
+s.next(); 
+s.next(); 
+s.next(); 
+max_values.add(Integer.parseInt(s.next())); 
+} 
+int maximum=0; 
+for (int max: max_values) 
+{ 
+if(max>maximum) 
+{ 
+maximum=max; 
+} 
+} 
+System.out.println("\nOverall Maximum: "+maximum+"\n"); 
+s.close(); 
+return 0; 
+} 
+} 
+# Save the file 
+# In eclipse->Right click on project exp6-> export->java->jar file->next-> select the export 
+destination -> /home/your_user_name/exp6.jar -> next -> next -> select main class ->browse -> 
+MaxCount -> finish 
+# exp6.jar file will be created in your home folder# Open terminal 
+# Now Start NameNode daemon and DataNode daemon: 
+~/hadoop/sbin/start-dfs.sh 
+# Make the HDFS directories required to execute MapReduce jobs 
+~/hadoop/bin/hdfs dfs -mkdir /user 
+~/hadoop/bin/hdfs dfs -mkdir /user/saniya123
+# Put sample6.txt file in hdfs 
+~/hadoop/bin/hdfs dfs -put ~/sample6.txt input_data 
+# Perform MapReduce job 
+~/hadoop/bin/hadoop jar ~/exp6.jar input_data output_data 
+# Output 
+
+Line	First	Second	Maximum 
+no 	Column	Column 
+
+1	14	5	14 
+2	4	39	39 
+3	45	59	59 
+4	7	9	9 
+5	8	66	66 
+6	77	41	77 
+7	10	89	89 
+8	7	5	7 
+9	41	45	45 
+10	44	888	888 
+11	144	5	144 
+12	4	396	396 
+13	45	598	598 
+14	7	9	9 
+15	87	66	87 
+16	79	41	79 
+17	100	89	100 
+18	7	501	501 
+19	414	451	451 
+20	444	1	444 
+21	447	39	447 
+22	45	596	596 
+23	787	999	999 
+24	8	66	66 
+25	777	541	777 
+
+Overall Maximum: 999 
+# Our task is done, so delete the distributed files (input_data & output_data) 
+~/hadoop/bin/hdfs dfs -rm -r input_data output_data# Also delete local output file 
+rm -r ~/output_data 
+# Stop haddop 
+~/hadoop/sbin/stop-dfs.sh 
+jps 

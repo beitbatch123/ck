@@ -1,0 +1,337 @@
+
+Exp4: Design a disstributed appl which consists of server and client using thread.
+
+//TCPServer.java
+import java.io.*;  
+import java.net.*;  
+public class TCPServer {   
+     public static void main(String[] args) {  
+          int port=8989;  
+          try {  
+               ServerSocket serverSocket=new ServerSocket(8989);  
+               System.out.println("SERVER WAITING");  
+               Socket clientSocket=serverSocket.accept();  
+               BufferedReader fromClient=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));  
+               PrintStream toClient=new PrintStream(clientSocket.getOutputStream());  
+               while(true)  
+               {  
+                    int choice=Integer.parseInt(fromClient.readLine());  
+                    System.out.print(choice);  
+                    switch(choice)  
+                    {  
+                    case 1:  
+                         int no=Integer.parseInt(fromClient.readLine());  
+                         int result=1;  
+                         if (no!=0 && no!=1){  
+                              for(int i=2;i<=no;i++)  
+                                   result*=i;  
+                         }  
+                         toClient.flush();  
+                         toClient.println(result);  
+	                         break;  
+                    case 2:  
+                         no=Integer.parseInt(fromClient.readLine());  
+                         result=0;  
+                         while(no!=0){  
+                              result+=no%10;  
+                              no/=10;  
+                         }  
+                         toClient.flush();  
+                         toClient.println(result);  
+                         break;  
+                    case 3:  
+                         int stringChoice;  
+                         do{  
+                              stringChoice=Integer.parseInt(fromClient.readLine());;  
+                              switch(stringChoice){  
+                              case 1:  
+                                   String first_str=fromClient.readLine();  
+                                   result=first_str.length();  
+                                   toClient.flush();  
+                                   toClient.println(result);  
+                                   break;  
+                              case 2:  
+                                   first_str=fromClient.readLine();  
+                                   String second_str=fromClient.readLine();  
+                                   result=first_str.compareTo(second_str);  
+                                   String str_result="";  
+                                   if (result ==0)  
+                                        str_result="Both are equal";  
+                                   else if (result<0)  
+                                        str_result=second_str+" is greater";  
+                                   else   
+                                        str_result=first_str+" is greater";  
+                                   toClient.flush();  
+                                   toClient.println(str_result);  
+                                   break;  
+                              case 3:  
+                                   first_str=fromClient.readLine();  
+                                   second_str=fromClient.readLine();  
+                                   result=first_str.compareTo(second_str);  
+                                   str_result=first_str+second_str;  
+                                   toClient.flush();  
+                                   toClient.println(str_result);  
+                                   break;  
+                              case 4:  
+                                   first_str=fromClient.readLine();  
+                                   int i,j;  
+                                   for(i=0,j=first_str.length()-1;i<=j;i++,j--){  
+                                        if(first_str.charAt(i)!=first_str.charAt(j))  
+                                             break;  
+                                   }  
+                                   if (i<j)str_result="NO";  
+                                   else  
+                                        str_result="YES";  
+                                   toClient.flush();  
+                                   toClient.println(str_result);  
+                                   break;  
+                              case 5:  
+                                   first_str=fromClient.readLine();  
+                                   second_str=fromClient.readLine();  
+                                   result=first_str.indexOf(second_str);  
+                                   if(result==-1)  
+                                        str_result="NO";  
+                                   else  
+                                        str_result="YES";  
+                                   toClient.flush();  
+                                   toClient.println(str_result);  
+                                   break;  
+                              case 6:  
+                                   break;  
+                              }  
+                         }while(stringChoice!=6);  
+                         break;  
+                    case 4:  
+                         break;  
+                    }  
+               }  
+          } catch (Exception e) {  
+               // TODO Auto-generated catch block  
+          }  
+     }  
+} 
+
+
+/********************output**********************/ 
+guest-bH9JEa@sai-desktop:~$ javac TCPServer.java 
+guest-bH9JEa@sai-desktop:~$ java TCPServer 
+SERVER WAITING 
+13 
+
+
+//TCPClient.java
+import java.io.BufferedReader;  
+import java.io.InputStreamReader;  
+import java.io.PrintStream;  
+import java.net.ServerSocket;  
+import java.net.Socket;  
+public class TCPClient {  
+      public static void main(String[] args) {  
+           int port=8989;  
+           try {  
+                Socket clientSocket=new Socket("localhost",8989);  
+                System.out.println("Client Started");  
+                InputStreamReader isr = new InputStreamReader(System.in);  
+                BufferedReader br = new BufferedReader(isr);  
+                PrintStream toServer=new PrintStream(clientSocket.getOutputStream());  
+                BufferedReader fromServer=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));  
+                String menu="SOCKET PROGRAMMING MENU\n1.FACTORIAL\n2.SUM OF DIGITS OF A NO\n3.String Operation\n4.EXIT\nENTER UR CHOICE";  
+                int choice=-1;  
+                do  
+                {  
+                     toServer.flush();  
+                     System.out.println(menu);  
+                     choice=Integer.parseInt(br.readLine());  
+                     toServer.println(choice);  
+                     toServer.flush();  
+                     switch(choice)  
+                     {  
+                     case 1:  
+                          System.out.println("ENTER A NO:");  
+                          int no=Integer.parseInt(br.readLine());  
+                          toServer.println(no);  
+                          int result=Integer.parseInt(fromServer.readLine());  
+                          System.out.println("FACTORIAL IS:"+result);  
+                          break;  
+                     case 2:  
+                          System.out.println("ENTER A NO:");  
+                          no=Integer.parseInt(br.readLine());  
+                          toServer.println(no);  
+                          result=Integer.parseInt(fromServer.readLine());  
+                          System.out.println("SUM OF EACH DIGITS IS:"+result);  
+                          break;  
+                     case 3:  
+                          String stringmenu="STRING OPERATION MENU\n1.LENGTH\n2.COMPARE\n3.CONCATENATE\n4.IS STRING IS PALINDROME\n5.SUBSTRING\n6.EXIT\nENTER UR CHOICE";  
+                          int stringChoice;  
+                          do  
+                          {  
+                               System.out.println(stringmenu);  
+                               stringChoice=Integer.parseInt(br.readLine());  
+                               toServer.println(stringChoice);  
+                               toServer.flush();  
+                               switch(stringChoice)  
+                               {  
+                               case 1:  
+                                    System.out.println("ENTER A String:");  
+                                    String str=br.readLine();  
+                                    toServer.println(str);  
+                                    result=Integer.parseInt(fromServer.readLine());  
+                                    System.out.println("LENGTH IS:"+result);  
+                                    break;  
+                               case 2:  
+                                    System.out.println("ENTER First String:");  
+                                    String first_str=br.readLine();  
+                                    toServer.println(first_str);  
+                                    System.out.println("ENTER Second String:");  
+                                    String second_str=br.readLine();  
+                                    toServer.println(second_str);  
+                                    String str_result=fromServer.readLine();  
+                                    System.out.println(str_result);  
+                                    break;  
+                               case 3:  
+                                    System.out.println("ENTER First String:");  
+                                    first_str=br.readLine();  
+                                    toServer.println(first_str);  
+                                    System.out.println("ENTER Second String:");  
+                                    second_str=br.readLine();  
+                                    toServer.println(second_str);  
+                                    str_result=fromServer.readLine();  
+                                    System.out.println("CONCANATED STRING IS"+str_result);  
+                                    break;  
+                               case 4:  
+                                    System.out.println("ENTER A String:");  
+                                    str=br.readLine();  
+                                    toServer.println(str);  
+                                    str_result=fromServer.readLine();  
+                                    System.out.println("PALINDROME RESULT:"+str_result);  
+                                    break;  
+                               case 5:  
+                                    System.out.println("ENTER First String:");  
+                                    first_str=br.readLine();  
+                                    toServer.println(first_str);  
+                                    System.out.println("ENTER Second(it is checkd as substring) String:");  
+                                    second_str=br.readLine();  
+                                    toServer.println(second_str);  
+                                    str_result=fromServer.readLine();  
+                                    System.out.println("Substring Result:"+str_result);  
+                                    break;  
+                               case 6:  
+                                    break;  
+                               }  
+                          }while(stringChoice!=6);  
+                          break;  
+                     case 4:  
+                          break;  
+                     default:  
+                          System.out.println("INVALID CHOICE");  
+                     }  
+                }while(choice!=4);  
+           } catch (Exception e) {  
+                // TODO Auto-generated catch block  
+           }  
+      }  
+} 
+
+
+/********************************ouput****************************/ 
+guest-bH9JEa@sai-desktop:~$ javac TCPClient.java 
+guest-bH9JEa@sai-desktop:~$ java TCPClient 
+Client Started 
+SOCKET PROGRAMMING MENU 
+1.FACTORIAL 
+2.SUM OF DIGITS OF A NO 
+3.String Operation 
+4.EXIT 
+ENTER UR CHOICE 
+1 
+ENTER A NO: 
+5 
+FACTORIAL IS:120 
+SOCKET PROGRAMMING MENU 
+1.FACTORIAL 
+2.SUM OF DIGITS OF A NO 
+3.String Operation 
+4.EXIT 
+ENTER UR CHOICE 
+3 
+STRING OPERATION MENU 
+1.LENGTH 
+2.COMPARE 
+3.CONCATENATE 
+4.IS STRING IS PALINDROME 
+5.SUBSTRING 
+6.EXIT 
+ENTER UR CHOICE 
+1 
+ENTER A String: 
+rani 
+LENGTH IS:4 
+STRING OPERATION MENU 
+1.LENGTH 
+2.COMPARE 
+3.CONCATENATE 
+4.IS STRING IS PALINDROME 
+5.SUBSTRING 
+6.EXIT 
+ENTER UR CHOICE 
+2 
+ENTER First String: 
+geeta 
+ENTER Second String: 
+rani 
+rani is greater 
+STRING OPERATION MENU 
+1.LENGTH 
+2.COMPARE 
+3.CONCATENATE 
+4.IS STRING IS PALINDROME 
+5.SUBSTRING 
+6.EXIT 
+ENTER UR CHOICE 
+3 
+ENTER First String: 
+c  
+ENTER Second String: 
+++ 
+CONCANATED STRING ISc++ 
+STRING OPERATION MENU 
+1.LENGTH 
+2.COMPARE 
+3.CONCATENATE 
+4.IS STRING IS PALINDROME 
+5.SUBSTRING 
+6.EXIT 
+ENTER UR CHOICE 
+4 
+ENTER A String: 
+madam 
+PALINDROME RESULT:YES 
+STRING OPERATION MENU 
+1.LENGTH 
+2.COMPARE 
+3.CONCATENATE 
+4.IS STRING IS PALINDROME 
+5.SUBSTRING 
+6.EXIT 
+ENTER UR CHOICE 
+5 
+ENTER First String: 
+exeute 
+ENTER Second(it is checkd as substring) String: 
+exe 
+Substring Result:YES 
+STRING OPERATION MENU 
+1.LENGTH 
+2.COMPARE 
+3.CONCATENATE 
+4.IS STRING IS PALINDROME 
+5.SUBSTRING 
+6.EXIT 
+ENTER UR CHOICE 
+6 
+SOCKET PROGRAMMING MENU 
+1.FACTORIAL 
+2.SUM OF DIGITS OF A NO 
+3.String Operation 
+4.EXIT 
+ENTER UR CHOICE 

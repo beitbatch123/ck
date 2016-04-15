@@ -1,0 +1,144 @@
+
+Exp 2: Design a distributed application using RPC for remote computation where client submits an
+integer value to the server and server calculates factorial and returns the result to the client
+program.
+
+
+Steps:
+# Create the IDL
+# Open terminal
+sudo apt-get update
+sudo apt-get install rpcbind
+mkdir exp2
+cd exp2
+gedit fact.x
+# add following code in it
+struct intpair {
+int a;
+};
+program FACT_PROG {
+version FACT_VERS {
+int FACT(intpair) = 1;
+} = 1;
+} = 0x23451111;
+# save and exit the file
+rpcgen -a -C fact.x
+gedit Makefile.fact
+# find the following line in the file
+CFLAGS += -g
+and change it to:
+CFLAGS += -g -DRPC_SVC_FG
+# find the following line in the same file
+RPCGENFLAGS =
+and change it to:
+RPCGENFLAGS = -C
+# save and exit the filegedit fact_client.c
+# we will make some changes in this file (changes are highlighted)
+#include "fact.h"
+void
+fact_prog_1(char *host,int a)
+{
+CLIENT *clnt;
+int *result_1;
+intpair fact_1_arg;
+#ifndefDEBUG
+clnt = clnt_create (host, FACT_PROG, FACT_VERS, "udp");
+if (clnt == NULL) {
+clnt_pcreateerror (host);
+exit (1);
+}
+#endif /* DEBUG */
+fact_1_arg.a=a;
+result_1 = fact_1(&fact_1_arg, clnt);
+if (result_1 == (int *) NULL) {
+clnt_perror (clnt, "call failed");
+}
+else
+{
+printf("Factorial=%d",*result_1);
+}
+#ifndefDEBUG
+clnt_destroy (clnt);
+#endif /* DEBUG */
+}
+int
+main (int argc, char *argv[])
+{
+char *host;
+int a,ch;
+if (argc < 2) {
+printf ("usage: %s server_host\n", argv[0]);
+exit (1);
+}
+host = argv[1];do
+{
+system("clear");
+printf("\nEnter a no:: ");
+scanf("%d",&a);
+fact_prog_1 (host,a);
+printf("\nTry again : (1/0) :: ");
+scanf("%d",&ch);
+} while(ch==1);
+exit (0);
+}
+# save and exit the file
+gedit fact_server.c
+# we will make some changes in this file (changes are highlighted)
+#include "fact.h"
+int *
+fact_1_svc(intpair *argp, struct svc_req *rqstp)
+{
+static int result,n,fact;
+int i;
+n=argp->a;
+// factorial logic
+fact = 1;
+printf("\n Received : n= %d \n",n);
+for (i=n;i>0;i--)
+{
+fact=fact * i;
+}
+result=fact;
+return &result;
+}
+# save and exit the file# compile
+make -f Makefile.fact
+# In one terminal, run:
+sudo ./fact_server
+# In another terminal, run:
+./fact_client localhost
+
+
+
+
+beit61@sai-desktop:~$ cd rpc/
+beit61@sai-desktop:~/rpc$ sudo ./fact_server 
+[sudo] password for beit61: 
+
+ Received no =-1217122304
+ Received no =1
+ Received no =-1216720896
+ Received no =2
+
+beit61@sai-desktop:~$ cd rpc/
+beit61@sai-desktop:~/rpc$ sudo ./fact_client localhost
+[sudo] password for beit61: 
+Factorial =1
+ Enter the no=1
+Factorial =1 
+ Do u want to continue.... (Yes=1,No=0)2
+beit61@sai-desktop:~/rpc$ sudo ./fact_client localhost
+Factorial =1
+ Enter the no=2
+Factorial =2 
+ Do u want to continue.... (Yes=1,No=0)1
+
+ Enter the no=5
+Factorial =120 
+ Do u want to continue.... (Yes=1,No=0)
+
+
+
+
+
+
